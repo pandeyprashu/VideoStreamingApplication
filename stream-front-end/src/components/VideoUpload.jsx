@@ -20,7 +20,7 @@ function VideoUpload() {
   const [message, setMessage] = useState("");
 
   function handleFileChange(event) {
-    console.log(event.target.files[0]);
+    setSelectedFile(event.target.files[0]);
   }
 
   function formFieldChange(event){
@@ -60,6 +60,8 @@ function VideoUpload() {
       console.log(response);
       setMessage("File Uploaded");
     }catch(error){
+      console.error(error);
+      setMessage("File Upload Failed");
 
     }
     
@@ -70,7 +72,7 @@ function VideoUpload() {
       <Card className="flex flex-col items-center justify-center">
         <h1>Upload Videos</h1>
         <div>
-          <form class="flex flex-col space-y-6"  onSubmit={handleForm}>
+          <form className="flex flex-col space-y-6"  onSubmit={handleForm}>
 
             <div>
               <div className="mb-2 block">
@@ -92,20 +94,20 @@ function VideoUpload() {
               />
             </div>
             <div className="flex items-center space-x-5 justify-center">
-              <div class="shrink-0">
+              <div className="shrink-0">
                 <img
-                  class="h-16 w-16 object-cover"
+                  className="h-16 w-16 object-cover"
                   src={videoLogo}
                   alt="Current profile photo"
                 />
               </div>
-              <label class="block">
-                <span class="sr-only">Choose Video File</span>
+              <label className="block">
+                <span className="sr-only">Choose Video File</span>
                 <input
                 name="file"
                   onChange={handleFileChange}
                   type="file"
-                  class="block w-full text-sm text-slate-500
+                  className="block w-full text-sm text-slate-500
         file:mr-4 file:py-2 file:px-4
         file:rounded-full file:border-0
         file:text-sm file:font-semibold
