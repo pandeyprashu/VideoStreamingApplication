@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import videoLogo from "../assets/uploading.png";
 import {
   Button,
@@ -7,10 +8,12 @@ import {
   FileInput,
   TextInput,
   Textarea,
+  Progress,
+  Alert,
 } from "flowbite-react";
 
 function VideoUpload() {
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(false);
   const [progress, setprogress] = useState(0);
   const [meta, setMeta] = useState({
     title: "",
@@ -21,64 +24,73 @@ function VideoUpload() {
 
   function handleFileChange(event) {
     setSelectedFile(event.target.files[0]);
+    console.log(event.target.files[0]);
   }
 
-  function formFieldChange(event){
+  function formFieldChange(event) {
     setMeta({
       ...meta,
-      [event.target.name]:event.target.value
-
-    })
+      [event.target.name]: event.target.value,
+    });
   }
   function handleForm(formEvent) {
     formEvent.preventDefault();
-    if(!selectedFile){
+    if (!selectedFile) {
       alert("Select File");
+      return;
     }
     // submit file to server
-    saveVideoToServer(selectedFile,meta);
-    
-    
+    saveVideoToServer(selectedFile, meta);
   }
 
-  async function  saveVideoToServer(video,VideoMetadata){
-
+  async function saveVideoToServer(video, VideoMetadata) {
     setUploading(true);
     // api call
-    try{
-      let response= await axios.post('https://localhost:8080/api/v1/videos',formData,{
-        headers:{
-          'Content-Type': "multipart/form-data",
+    try {
+      let formData = new FormData();
+      formData.append("title", VideoMetadata.title);
+      formData.append("description", VideoMetadata.description);
+      formData.append("file", selectedFile);
 
-        },
-        onUploadProgress :(progressEvent)=>{
-          console.log();
-        },
-    
-  }
-);
-      console.log(response);
+      let response = await axios.post(
+        "http://localhost:8080/api/v1/videos",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          onUploadProgress: (progressEvent) => {
+            const progress = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setProgress(progress);
+          },
+        }
+      );
+      //console.log(response);
       setMessage("File Uploaded");
-    }catch(error){
+      setUploading(false);
+    } catch (error) {
       console.error(error);
+      setUploading(false);
       setMessage("File Upload Failed");
-
     }
-    
-    
   }
   return (
     <div className="text-white">
       <Card className="flex flex-col items-center justify-center">
         <h1>Upload Videos</h1>
         <div>
-          <form className="flex flex-col space-y-6"  onSubmit={handleForm}>
-
+          <form className="flex flex-col space-y-6" onSubmit={handleForm}>
             <div>
               <div className="mb-2 block">
                 <Label htmlFor="file-upload" value="Video Title" />
               </div>
-              <TextInput onChange={formFieldChange} name="title" placeholder="Enter Title" />
+              <TextInput
+                onChange={formFieldChange}
+                name="title"
+                placeholder="Enter Title"
+              />
             </div>
             <div className="max-w-md">
               <div className="mb-2 block">
@@ -86,7 +98,7 @@ function VideoUpload() {
               </div>
               <Textarea
                 id="comment"
-                name= "description"
+                name="description"
                 onChange={formFieldChange}
                 placeholder="Write Video Description..."
                 required
@@ -104,7 +116,7 @@ function VideoUpload() {
               <label className="block">
                 <span className="sr-only">Choose Video File</span>
                 <input
-                name="file"
+                  name="file"
                   onChange={handleFileChange}
                   type="file"
                   className="block w-full text-sm text-slate-500
@@ -117,8 +129,30 @@ function VideoUpload() {
                 />
               </label>
             </div>
+            <div className=" ">
+             {
+              uploading &&(
+                <Progress
+                hidden={!uploading}
+                progress={progress}
+                textLabel="Uploading"
+                size="lg"
+                labelProgress
+                labelText
+              />
+              )}
+            </div>
+            <div className="">
+              { message && (
+                <Alert color={"success"}>
+                <span className="font-medium">Submitted Successfully</span>
+              </Alert>
+
+              )}
+              
+            </div>
             <div className="flex justify-center">
-              <Button>Upload</Button>
+              <Button disabled={uploading} onClick={handleForm}>Upload</Button>
             </div>
           </form>
         </div>
